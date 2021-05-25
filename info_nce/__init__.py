@@ -18,6 +18,8 @@ class InfoNCE(nn.Module):
 
     Args:
         temperature: Logits are divided by temperature before calculating the cross entropy.
+        reduction: Reduction method applied to the output.
+            Value must be one of [None, 'none', 'sum', 'mean']
 
     Input shape:
         query: (N, D) Tensor with query samples (e.g. embeddings of the input).
@@ -37,15 +39,16 @@ class InfoNCE(nn.Module):
         >>> output = loss(query, positive_key, negative_keys)
     """
 
-    def __init__(self, temperature=0.1):
+    def __init__(self, temperature=0.1, reduction='mean'):
         super().__init__()
         self.temperature = temperature
+        self.reduction = reduction
 
     def forward(self, query, positive_key, negative_keys=None):
-        return info_nce(query, positive_key, negative_keys, temperature=self.temperature)
+        return info_nce(query, positive_key, negative_keys, temperature=self.temperature, reduction=self.reduction)
 
 
-def info_nce(query, positive_key, negative_keys=None, temperature=0.1):
+def info_nce(query, positive_key, negative_keys=None, temperature=0.1, reduction='mean'):
     # Inputs all have 2 dimensions.
     if query.dim() != 2 or positive_key.dim() != 2 or (negative_keys is not None and negative_keys.dim() != 2):
         raise ValueError('query, positive_key and negative_keys should all have 2 dimensions.')
@@ -82,7 +85,7 @@ def info_nce(query, positive_key, negative_keys=None, temperature=0.1):
         # Positive keys are the entries on the diagonal
         labels = torch.arange(len(query), device=query.device)
 
-    return F.cross_entropy(logits / temperature, labels, reduction='mean')
+    return F.cross_entropy(logits / temperature, labels, reduction=reduction)
 
 
 def transpose(x):
