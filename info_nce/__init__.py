@@ -19,7 +19,8 @@ class InfoNCE(nn.Module):
     Args:
         temperature: Logits are divided by temperature before calculating the cross entropy.
         reduction: Reduction method applied to the output.
-            Value must be one of [None, 'none', 'sum', 'mean']
+            Value must be one of ['none', 'sum', 'mean'].
+            See torch.nn.functional.cross_entropy for more details about each option.
 
     Input shape:
         query: (N, D) Tensor with query samples (e.g. embeddings of the input).
