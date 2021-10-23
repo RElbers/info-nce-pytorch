@@ -56,7 +56,7 @@ Can be used with negative keys, whereby each query sample is compared with only 
 
 
 Loss graph
-------
+----------
 Suppose we have some initial mean vectors ``µ_q``, ``µ_p``, ``µ_n`` and a covariance matrix ``Σ = I/10``, then we can plot the value of the InfoNCE loss by sampling from distributions with interpolated mean vectors.
 Given interpolation weights ``α`` and ``β``, we define the distribution ``Q ~ N(µ_q, Σ)`` for the query samples, the distribution  ``P_α ~ N(αµ_q + (1-α)µ_p, Σ)`` for the positive samples
 and the distribution ``N_β ~ N(βµ_q + (1-β)µ_n, Σ)`` for the negative samples.
