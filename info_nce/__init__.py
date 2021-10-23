@@ -39,11 +39,11 @@ class InfoNCE(nn.Module):
          Value of the InfoNCE Loss.
 
      Examples:
-        >>> batch_size, embedding_size = 32, 128
         >>> loss = InfoNCE()
+        >>> batch_size, num_negative, embedding_size = 32, 48, 128
         >>> query = torch.randn(batch_size, embedding_size)
         >>> positive_key = torch.randn(batch_size, embedding_size)
-        >>> negative_keys = torch.randn(4 * batch_size, embedding_size)
+        >>> negative_keys = torch.randn(num_negative, embedding_size)
         >>> output = loss(query, positive_key, negative_keys)
     """
 
