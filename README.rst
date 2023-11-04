@@ -17,6 +17,12 @@ This package is `available on PyPI <https://pypi.org/project/info-nce-pytorch/>`
 Example usage
 -------------
 
+Import this package.
+
+.. code:: python
+
+    from info_nce import InfoNCE, info_nce
+
 Can be used without explicit negative keys, whereby each sample is compared with the other samples in the batch.
 
 .. code:: python
