@@ -105,17 +105,43 @@ def info_nce(query, positive_key, negative_keys=None, temperature=0.1, reduction
 
         # First index in last dimension are the positive samples
         logits = torch.cat([positive_logit, negative_logits], dim=1)
-        labels = torch.zeros(len(logits), dtype=torch.long, device=query.device)
+
+        # Apply temperature
+        logits = torch.div(logits, temperature)
+
+        # Compute positive terms
+        nominator = -1. * positive_logit.squeeze()
+
+        # Apply log sum exp tricks here
+        a_max, _ = torch.max(logits, dim=1, keepdim=True)
+        denominator = torch.log(torch.sum(torch.exp(logits - a_max), dim=1)) + a_max.squeeze()
     else:
         # Negative keys are implicitly off-diagonal positive keys.
 
         # Cosine between all combinations
         logits = query @ transpose(positive_key)
 
-        # Positive keys are the entries on the diagonal
-        labels = torch.arange(len(query), device=query.device)
+        # Apply temperature
+        logits = torch.div(logits, temperature)
 
-    return F.cross_entropy(logits / temperature, labels, reduction=reduction)
+        # Compute positive terms
+        nominator = -1. * torch.diag(logits)
+
+        # Apply log sum exp tricks here
+        a_max, _ = torch.max(logits, dim=1, keepdim=True)
+        denominator = torch.log(torch.sum(torch.exp(logits - a_max), dim=1)) + a_max.squeeze()
+
+    # compute loss
+    loss = nominator + denominator
+
+    if reduction == 'mean':
+        return loss.mean()
+    elif reduction == 'sum':
+        return loss.sum()
+    elif reduction == 'none':
+        return loss
+    else:
+        raise ValueError(f'The reduction should be mean, sum or none. Took reduction={reduction}.')
 
 
 def transpose(x):
@@ -124,3 +150,28 @@ def transpose(x):
 
 def normalize(*xs):
     return [None if x is None else F.normalize(x, dim=-1) for x in xs]
+
+
+if __name__ == '__main__':
+    # Test Case 1
+    loss = InfoNCE(negative_mode='unpaired')  # negative_mode='unpaired' is the default value
+    batch_size, num_negative, embedding_size = 32, 48, 128
+    query = torch.randn(batch_size, embedding_size)
+    positive_key = torch.randn(batch_size, embedding_size)
+    negative_keys = torch.randn(num_negative, embedding_size)
+    output = loss(query, positive_key, negative_keys)
+
+    # Test Case 2
+    loss = InfoNCE(negative_mode='paired')
+    batch_size, num_negative, embedding_size = 32, 6, 128
+    query = torch.randn(batch_size, embedding_size)
+    positive_key = torch.randn(batch_size, embedding_size)
+    negative_keys = torch.randn(batch_size, num_negative, embedding_size)
+    output = loss(query, positive_key, negative_keys)
+
+    # Test Case 3
+    loss = InfoNCE(negative_mode='unpaired')  # negative_mode='unpaired' is the default value
+    batch_size, num_negative, embedding_size = 32, 48, 128
+    query = torch.randn(batch_size, embedding_size)
+    positive_key = torch.randn(batch_size, embedding_size)
+    output = loss(query, positive_key)
